@@ -11,6 +11,7 @@ extern "C" {
 #define _INCLUDE_R_LIST_HEAD_H_
 typedef void (*RListFree)(void *ptr);
 
+// RListIter can handle arbitary value for list data structure
 typedef struct r_list_iter_t {
 	void *data;
 	struct r_list_iter_t *n, *p;

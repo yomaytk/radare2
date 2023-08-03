@@ -238,6 +238,7 @@ static void createFunction(RCore *core, fcn_t* fcn, const char *name) {
 }
 
 #define Fhandled(x) r_strf ("handled.%"PFMT64x, x)
+// core function for analyzing basic blocks
 R_API bool core_anal_bbs(RCore *core, const char* input) {
 	r_return_val_if_fail (core && input, false);
 	if (!r_io_is_valid_offset (core->io, core->offset, false)) {

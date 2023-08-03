@@ -639,6 +639,7 @@ static void r_core_project_zip(RCore *core, const char *prj_dir) {
 	free (cwd);
 }
 
+// cmd 'aab' don't call this function
 R_API bool r_core_project_save(RCore *core, const char *prj_name) {
 	bool scr_null = false;
 	bool ret = true;

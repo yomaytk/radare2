@@ -605,6 +605,12 @@ R_API int r_main_radare2(int argc, const char **argv) {
 		return 0;
 	}
 
+	// -noI option
+	if (argc > 2) {
+		for (int i = 0; i < argc;i++)
+				r->no_interactive |= !strcmp(argv[i], "-noI");
+    }
+
 	set_color_default (r);
 	bool show_version = false;
 	bool show_versions = false;
@@ -1342,6 +1348,11 @@ R_API int r_main_radare2(int argc, const char **argv) {
 			if (opt.ind < argc) {
 				R_FREE (pfile);
 				while (opt.ind < argc) {
+					// ignore binary load for '-noI' option
+					if (!strcmp(argv[opt.ind], "-noI")) {
+						opt.ind++;
+						continue;
+					}
 					R_FREE (pfile);
 					pfile = strdup (argv[opt.ind++]);
 #if R2__WINDOWS__
@@ -1701,77 +1712,85 @@ R_API int r_main_radare2(int argc, const char **argv) {
 			}
 		}
 		r_core_project_undirty (r);
-		for (;;) {
-			if (!r_core_prompt_loop (r)) {
-				quietLeak = true;
-			}
-			ret = r->num->value;
-			debug = r_config_get_b (r->config, "cfg.debug");
-			if (ret != -1 && r_cons_is_interactive ()) {
-				char *question;
-				bool no_question_debug = ret & 1;
-				bool no_question_save = (ret & 2) >> 1;
-				bool y_kill_debug = (ret & 4) >> 2;
-				bool y_save_project = (ret & 8) >> 3;
-
-				if (r_core_task_running_tasks_count (&r->tasks) > 0) {
-					if (r_cons_yesno ('y', "There are running background tasks. Do you want to kill them? (Y/n)")) {
-						r_core_task_break_all (&r->tasks);
-						r_core_task_join (&r->tasks, r->tasks.main_task, -1);
-					} else {
-						continue;
-					}
+		
+		if (r->no_interactive) {
+			// -noI option process
+			R_LOG_DEBUG("Enter no interactive mode.\n");
+			r_core_exec_aab(r);
+		} else {
+			// interactive analyzing mode
+			for (;;) {
+				if (!r_core_prompt_loop (r)) {
+					quietLeak = true;
 				}
+				ret = r->num->value;
+				debug = r_config_get_b (r->config, "cfg.debug");
+				if (ret != -1 && r_cons_is_interactive ()) {
+					char *question;
+					bool no_question_debug = ret & 1;
+					bool no_question_save = (ret & 2) >> 1;
+					bool y_kill_debug = (ret & 4) >> 2;
+					bool y_save_project = (ret & 8) >> 3;
 
-				if (debug) {
-					if (no_question_debug) {
-						if (r_config_get_i (r->config, "dbg.exitkills") && y_kill_debug) {
-							r_debug_kill (r->dbg, r->dbg->pid, r->dbg->tid, 9); // KILL
-						}
-					} else {
-						if (r_cons_yesno ('y', "Do you want to quit? (Y/n)")) {
-							if (r_config_get_b (r->config, "dbg.exitkills") &&
-									r_cons_yesno ('y', "Do you want to kill the process? (Y/n)")) {
-								r_debug_kill (r->dbg, r->dbg->pid, r->dbg->tid, 9); // KILL
-							} else {
-								r_debug_detach (r->dbg, r->dbg->pid);
-							}
+					if (r_core_task_running_tasks_count (&r->tasks) > 0) {
+						if (r_cons_yesno ('y', "There are running background tasks. Do you want to kill them? (Y/n)")) {
+							r_core_task_break_all (&r->tasks);
+							r_core_task_join (&r->tasks, r->tasks.main_task, -1);
 						} else {
 							continue;
 						}
 					}
-				}
 
-				const char *prj = r_config_get (r->config, "prj.name");
-				if (R_STR_ISNOTEMPTY (prj)) {
-					if (r_core_project_is_dirty (r) && !r_config_get_b (r->config, "prj.alwaysprompt")) {
-						break;
-					}
-					if (no_question_save) {
-						if (y_save_project) {
-							r_core_project_save (r, prj);
+					if (debug) {
+						if (no_question_debug) {
+							if (r_config_get_i (r->config, "dbg.exitkills") && y_kill_debug) {
+								r_debug_kill (r->dbg, r->dbg->pid, r->dbg->tid, 9); // KILL
+							}
+						} else {
+							if (r_cons_yesno ('y', "Do you want to quit? (Y/n)")) {
+								if (r_config_get_b (r->config, "dbg.exitkills") &&
+										r_cons_yesno ('y', "Do you want to kill the process? (Y/n)")) {
+									r_debug_kill (r->dbg, r->dbg->pid, r->dbg->tid, 9); // KILL
+								} else {
+									r_debug_detach (r->dbg, r->dbg->pid);
+								}
+							} else {
+								continue;
+							}
 						}
-					} else {
-						question = r_str_newf ("Do you want to save the '%s' project? (Y/n)", prj);
-						if (r_cons_yesno ('y', "%s", question)) {
-							r_core_project_save (r, prj);
-						}
-						free (question);
 					}
-				}
-				if (r_config_get_b (r->config, "scr.confirmquit")) {
-					if (!r_cons_yesno ('n', "Do you want to quit? (Y/n)")) {
-						continue;
-					}
-				}
-			} else {
-				// r_core_project_save (r, prj);
-				if (debug && r_config_get_b (r->config, "dbg.exitkills")) {
-					r_debug_kill (r->dbg, 0, false, 9); // KILL
-				}
 
+					const char *prj = r_config_get (r->config, "prj.name");
+					if (R_STR_ISNOTEMPTY (prj)) {
+						if (r_core_project_is_dirty (r) && !r_config_get_b (r->config, "prj.alwaysprompt")) {
+							break;
+						}
+						if (no_question_save) {
+							if (y_save_project) {
+								r_core_project_save (r, prj);
+							}
+						} else {
+							question = r_str_newf ("Do you want to save the '%s' project? (Y/n)", prj);
+							if (r_cons_yesno ('y', "%s", question)) {
+								r_core_project_save (r, prj);
+							}
+							free (question);
+						}
+					}
+					if (r_config_get_b (r->config, "scr.confirmquit")) {
+						if (!r_cons_yesno ('n', "Do you want to quit? (Y/n)")) {
+							continue;
+						}
+					}
+				} else {
+					// r_core_project_save (r, prj);
+					if (debug && r_config_get_b (r->config, "dbg.exitkills")) {
+						r_debug_kill (r->dbg, 0, false, 9); // KILL
+					}
+
+				}
+				break;
 			}
-			break;
 		}
 	}
 

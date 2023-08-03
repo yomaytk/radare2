@@ -963,6 +963,7 @@ static const char *promptcolor (void) {
 }
 
 static R_TH_LOCAL int count = 0;
+// this function display prompt ([0x0000...]).
 static void __print_prompt(void) {
 	RCons *cons = r_cons_singleton ();
 	int columns = r_cons_get_size (NULL) - 2;

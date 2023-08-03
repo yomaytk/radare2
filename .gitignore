@@ -147,3 +147,5 @@ libr/include/sdb
 # libFuzzer
 crash-*
 corpus*
+# test
+sample_test

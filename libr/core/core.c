@@ -3425,6 +3425,14 @@ R_API bool r_core_prompt_loop(RCore *r) {
 	return true;
 }
 
+R_API bool r_core_exec_aab(RCore* r) {
+        r_core_cmd_queue(r, "aab");
+        r_core_prompt_exec(r);
+        r_core_cmd_queue(r, "pdf @ sym.solve");
+        r_core_prompt_exec(r);
+        return true;
+}
+
 static int prompt_flag(RCore *r, char *s, size_t maxlen) {
 	const char DOTS[] = "...";
 	const RFlagItem *f = r_flag_get_at (r->flags, r->offset, true);

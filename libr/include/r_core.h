@@ -356,6 +356,7 @@ struct r_core_t {
 	RThreadLock *lock;
 	bool in_log_process; // false;
 	RMainCallback r_main_radare2;
+	bool no_interactive;
 	// int (*r_main_radare2)(int argc, char **argv);
 	int (*r_main_rafind2)(int argc, const char **argv);
 	int (*r_main_ravc2)(int argc, const char **argv);
@@ -430,6 +431,7 @@ R_API int r_core_prompt_exec(RCore *core);
 R_API int r_core_lines_initcache(RCore *core, ut64 start_addr, ut64 end_addr);
 R_API int r_core_lines_currline(RCore *core);
 R_API bool r_core_prompt_loop(RCore *core);
+R_API bool r_core_exec_aab(RCore* core);
 R_API ut64 r_core_pava(RCore *core, ut64 addr);
 R_API int r_core_cmd(RCore *core, const char *cmd, bool log);
 R_API int r_core_cmd_task_sync(RCore *core, const char *cmd, bool log);

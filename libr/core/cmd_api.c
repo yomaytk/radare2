@@ -479,6 +479,7 @@ static char *r_cmd_filter_special(const char *input) {
 }
 #endif
 
+// ??? how does this function call `cmd_anal`?
 R_API int r_cmd_call(RCmd *cmd, const char *input) {
 	struct r_cmd_item_t *c;
 	int ret = -1;

@@ -5919,7 +5919,7 @@ out_finish:
 	r_cons_break_pop ();
 	return false;
 }
-
+// main cmd execute function
 static int run_cmd_depth(RCore *core, char *cmd) {
 	char *rcmd;
 	int ret = false;
@@ -5934,6 +5934,7 @@ static int run_cmd_depth(RCore *core, char *cmd) {
 		if (R_UNLIKELY (ptr)) {
 			*ptr = '\0';
 		}
+		// execute the every command
 		ret = r_core_cmd_subst (core, rcmd);
 		if (R_UNLIKELY (ret == -1)) {
 			R_LOG_ERROR ("Invalid command '%s' (0x%02x)", rcmd, *rcmd);
